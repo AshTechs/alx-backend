@@ -4,10 +4,9 @@
 from collections import defaultdict, OrderedDict
 from base_caching import BaseCaching
 
-
 class LFUCache(BaseCaching):
-    """ Defines a caching system using the Least Frequently Used algorithm.
-    with Least Recently Used (LRU) tie-breaking.
+    """ Defines a caching system using the Least Frequently Used algorithm
+        with Least Recently Used (LRU) tie-breaking.
     """
     def __init__(self):
         """ Initialize LFUCache """
@@ -26,8 +25,7 @@ class LFUCache(BaseCaching):
         else:
             if len(self.cache_data) >= BaseCaching.MAX_ITEMS:
                 min_freq = min(self.freq.values())
-                lfu_candidates = ([k for k, v in self.freq.items()
-                                  if v == min_freq])
+                lfu_candidates = [k for k, v in self.freq.items() if v == min_freq]
                 if lfu_candidates:
                     lru_key = min(lfu_candidates, key=lambda k: self.order[k])
                     del self.cache_data[lru_key]
