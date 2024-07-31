@@ -1,73 +1,98 @@
 #!/usr/bin/env python3
-""" Basic Flask app, Basic Babel setup, Get locale from request,
-    Parametrize templates, Force locale with URL parameter, Mock logging in,
-    Use user locale """
-from flask import Flask, render_template, request, g
-from flask_babel import Babel, gettext
+"""Flask app with user login emulation, localization, and timezone support."""
 
-app = Flask(__name__)
-babel = Babel(app)
-""" instantiate the Babel object """
+from flask import Flask, render_template, request, g
+from flask_babel import Babel, _
+import pytz
+from pytz.exceptions import UnknownTimeZoneError
+
+
+# Mock user database
 users = {
     1: {"name": "Balou", "locale": "fr", "timezone": "Europe/Paris"},
     2: {"name": "Beyonce", "locale": "en", "timezone": "US/Central"},
     3: {"name": "Spock", "locale": "kg", "timezone": "Vulcan"},
     4: {"name": "Teletubby", "locale": None, "timezone": "Europe/London"},
 }
-""" mock a database user table """
 
 
-class Config(object):
-    """ config class """
-    LANGUAGES = ['en', 'fr']
-    BABEL_DEFAULT_LOCALE = 'en'
-    BABEL_DEFAULT_TIMEZONE = 'UTC'
+class Config:
+    """Configuration for Babel."""
+    LANGUAGES = ["en", "fr"]
+    BABEL_DEFAULT_LOCALE = "en"
+    BABEL_DEFAULT_TIMEZONE = "UTC"
 
 
+app = Flask(__name__)
 app.config.from_object(Config)
-""" Use that class as config for Flask app """
-
-
-@app.route('/')
-def root():
-    """ basic Flask app """
-    return render_template("6-index.html")
+babel = Babel(app)
 
 
 @babel.localeselector
 def get_locale():
-    """ to determine the best match with our supported languages """
-    localLang = request.args.get('locale')
-    supportLang = app.config['LANGUAGES']
-    if localLang in supportLang:
-        return localLang
-    userId = request.args.get('login_as')
-    if userId:
-        localLang = users[int(userId)]['locale']
-        if localLang in supportLang:
-            return localLang
-    localLang = request.headers.get('locale')
-    if localLang in supportLang:
-        return localLang
-    return request.accept_languages.best_match(app.config['LANGUAGES'])
+    """Determine the best match with our supported lang. based on priority."""
+    # 1. Check if locale is provided in URL parameters
+    locale = request.args.get('locale')
+    if locale in app.config['LANGUAGES']:
+        return locale
+
+    # 2. Check if the user has a preferred locale
+    user = getattr(g, 'user', None)
+    if user and user['locale'] in app.config['LANGUAGES']:
+        return user['locale']
+
+    # 3. Check the locale from the request header
+    best_match = request.accept_languages.best_match(app.config['LANGUAGES'])
+    if best_match:
+        return best_match
+
+    # 4. Fallback to the default locale
+    return app.config['BABEL_DEFAULT_LOCALE']
+
+
+@babel.timezoneselector
+def get_timezone():
+    """Determine the correct timezone."""
+    timezone = request.args.get('timezone')
+    if timezone:
+        try:
+            return pytz.timezone(timezone).zone
+        except UnknownTimeZoneError:
+            pass
+    user = getattr(g, 'user', None)
+    if user and user['timezone']:
+        return user['timezone']
+    return app.config['BABEL_DEFAULT_TIMEZONE']
 
 
 def get_user():
-    """ returns a user dictionary or None
-    if the ID cannot be found or if login_as was not passed """
-    try:
-        userId = request.args.get('login_as')
-        return users[int(userId)]
-    except Exception:
-        return None
+    """Retrieve user from URL parameter."""
+    user_id = request.args.get('login_as', type=int)
+    return users.get(user_id, None)
 
 
 @app.before_request
 def before_request():
-    """ use get_user to find a user if any,
-    and set it as a global on flask.g.user  """
+    """Set user as global variable if logged in."""
     g.user = get_user()
 
 
-if __name__ == "__main__":
-    app.run()
+@app.route('/')
+def index():
+    """Route for the home page."""
+    home_title = _('home_title')
+    home_header = _('home_header')
+    if g.user:
+        welcome_message = _('logged_in_as', username=g.user['name'])
+    else:
+        welcome_message = _('not_logged_in')
+    return render_template(
+        '6-index.html',
+        home_title=home_title,
+        home_header=home_header,
+        welcome_message=welcome_message
+    )
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
