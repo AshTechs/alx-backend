@@ -67,7 +67,7 @@ def get_timezone():
     """
     Determine the correct timezone based on the request.
 
-    This function checks the 'timezone' parameter in the URL. If it's present & 
+    This function checks the 'timezone' parameter in the URL. If it's present &
     valid, it returns that timezone. Otherwise, it defaults to the configured
     default timezone.
 
