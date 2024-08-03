@@ -74,7 +74,8 @@ def index():
 
     # Determine current time
     user_timezone = pytz.timezone(get_timezone())
-    current_time = datetime.now(user_timezone).strftime('%b %d, %Y, %I:%M:%S %p')
+    current_time = (
+                datetime.now(user_timezone).strftime('%b %d, %Y, %I:%M:%S %p'))
 
     if g.user:
         welcome_message = _('logged_in_as', username=g.user['name'])
