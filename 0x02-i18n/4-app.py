@@ -4,7 +4,7 @@ Basic Flask app for displaying 'Hello world' with Babel integration.
 
 This module sets up a Flask application with Babel for language and timezone
 support. The app has a single route that displays a localized 'Hello world'
-message. It also includes functions to determine the appropriate locale and 
+message. It also includes functions to determine the appropriate locale and
 timezone based on the request.
 
 Classes:
@@ -19,11 +19,10 @@ Usage:
     Run this module to start the Flask application.
 """
 
-from flask import Flask, render_template, request, Response
+from flask import Flask, render_template, request
 from flask_babel import Babel, _
 import pytz
 from pytz.exceptions import UnknownTimeZoneError
-from typing import Optional
 
 
 class Config:
@@ -46,7 +45,7 @@ babel = Babel(app)
 
 
 @babel.localeselector
-def get_locale() -> Optional[str]:
+def get_locale():
     """
     Determine the best match with our supported languages.
 
@@ -64,17 +63,16 @@ def get_locale() -> Optional[str]:
 
 
 @babel.timezoneselector
-def get_timezone() -> str:
-    """
-    Determine the correct timezone based on the request.
+def get_timezone():
+    """Determine the correct timezone.
 
     This function checks the 'timezone' parameter in the URL. If it's present &
     valid, it returns that timezone. Otherwise, it defaults to the configured
     default timezone.
 
     Returns:
-        str: The determined timezone or the default timezone if no valid timezone is found.
-    """
+        str: Determined or the default timezone if no valid timezone is found.
+        """
     timezone = request.args.get('timezone')
     if timezone:
         try:
@@ -85,22 +83,21 @@ def get_timezone() -> str:
 
 
 @app.route('/')
-def index() -> Response:
-    """
-    Route for the home page.
+def index():
+    """Route for the home page.
 
     This function handles the root URL ('/') and renders the '4-index.html'
     template with localized strings for the title and header.
 
     Returns:
-        Response: The Flask response object with the rendered template.
+    Response: The Flask response object with the rendered template.
     """
     home_title = _('home_title')
     home_header = _('home_header')
     return render_template(
-        '4-index.html',
-        home_title=home_title,
-        home_header=home_header
+            '4-index.html',
+            home_title=home_title,
+            home_header=home_header
     )
 
 
