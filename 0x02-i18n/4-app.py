@@ -4,7 +4,7 @@ Basic Flask app for displaying 'Hello world' with Babel integration.
 
 This module sets up a Flask application with Babel for language and timezone
 support. The app has a single route that displays a localized 'Hello world'
-message. It also includes functions to determine the appropriate locale and
+message. It also includes functions to determine the appropriate locale and 
 timezone based on the request.
 
 Classes:
@@ -19,10 +19,11 @@ Usage:
     Run this module to start the Flask application.
 """
 
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, Response
 from flask_babel import Babel, _
 import pytz
 from pytz.exceptions import UnknownTimeZoneError
+from typing import Optional
 
 
 class Config:
@@ -45,7 +46,7 @@ babel = Babel(app)
 
 
 @babel.localeselector
-def get_locale():
+def get_locale() -> Optional[str]:
     """
     Determine the best match with our supported languages.
 
@@ -54,7 +55,7 @@ def get_locale():
     'Accept-Language' header in the request.
 
     Returns:
-        str: The best matching locale.
+        str: The best matching locale or None if no match is found.
     """
     locale = request.args.get('locale')
     if locale in app.config['LANGUAGES']:
@@ -63,7 +64,7 @@ def get_locale():
 
 
 @babel.timezoneselector
-def get_timezone():
+def get_timezone() -> str:
     """
     Determine the correct timezone based on the request.
 
@@ -72,7 +73,7 @@ def get_timezone():
     default timezone.
 
     Returns:
-        str: The determined timezone.
+        str: The determined timezone or the default timezone if no valid timezone is found.
     """
     timezone = request.args.get('timezone')
     if timezone:
@@ -84,7 +85,7 @@ def get_timezone():
 
 
 @app.route('/')
-def index():
+def index() -> Response:
     """
     Route for the home page.
 
