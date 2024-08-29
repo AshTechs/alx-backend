@@ -78,5 +78,5 @@ const getCurrentReservedStockById = async (itemId) => {
 };
 
 app.listen(port, () => {
-  console.log(`Server is running on http:
+  console.log(`Server is running on http://localhost:${port}`);
 });
